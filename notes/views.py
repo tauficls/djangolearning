@@ -10,21 +10,24 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Notes
 from .forms import NotesForm
 
-class NotesDeleteView(DeleteView):
+class NotesDeleteView(LoginRequiredMixin, DeleteView):
     model = Notes
     success_url = '/smart/notes'
-    template_name = "notes/notes_delete.html"
+    template_name = 'notes/notes_delete.html'
+    login_url = '/admin'
 
-class NotesUpdateView(UpdateView):
+class NotesUpdateView(LoginRequiredMixin, UpdateView):
     model = Notes
     success_url = '/smart/notes'
     form_class = NotesForm
+    login_url = '/admin'
 
-class NotesCreateView(CreateView):
+class NotesCreateView(LoginRequiredMixin, CreateView):
     model = Notes
     # fields = ['title', 'text']
     success_url = '/smart/notes'
     form_class = NotesForm
+    login_url = '/admin'
 
     def form_valid(self, form: BaseModelForm) -> HttpResponse:
         self.object = form.save(commit=False)
@@ -35,16 +38,17 @@ class NotesCreateView(CreateView):
 
 class NotesListView(LoginRequiredMixin, ListView):
     model = Notes
-    context_object_name = "notes"
-    template_name = "notes/notes_list.html"
-    login_url = "/admin"
+    context_object_name = 'notes'
+    template_name = 'notes/notes_list.html'
+    login_url = '/admin'
 
     def get_queryset(self) -> QuerySet[Any]:
         return self.request.user.notes.all()
 
-class NotesDetailView(DetailView):
+class NotesDetailView(LoginRequiredMixin, DetailView):
     model = Notes
-    context_object_name = "note"
+    context_object_name = 'note'
+    login_url = '/admin'
     
 
 # def list(requests):
@@ -56,6 +60,6 @@ class NotesDetailView(DetailView):
 #     try:
 #         note = Notes.objects.get(pk=pk)
 #     except Notes.DoesNotExist:
-#         raise Http404("Note doesn't exist")
+#         raise Http404('Note doesn't exist')
 
 #     return render(requests, 'notes/notes_detail.html', {'note': note})

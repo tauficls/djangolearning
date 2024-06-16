@@ -1,7 +1,11 @@
+from typing import Any
+from django.db.models.query import QuerySet
+from django.forms import BaseModelForm
 from django.shortcuts import render
-from django.http import Http404
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.views.generic import CreateView, UpdateView, DetailView, ListView
 from django.views.generic.edit import DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .models import Notes
 from .forms import NotesForm
@@ -22,10 +26,21 @@ class NotesCreateView(CreateView):
     success_url = '/smart/notes'
     form_class = NotesForm
 
-class NotesListView(ListView):
+    def form_valid(self, form: BaseModelForm) -> HttpResponse:
+        self.object = form.save(commit=False)
+        self.object.user = self.request.user
+        self.object.save()
+
+        return HttpResponseRedirect(self.get_success_url())
+
+class NotesListView(LoginRequiredMixin, ListView):
     model = Notes
     context_object_name = "notes"
     template_name = "notes/notes_list.html"
+    login_url = "/admin"
+
+    def get_queryset(self) -> QuerySet[Any]:
+        return self.request.user.notes.all()
 
 class NotesDetailView(DetailView):
     model = Notes
